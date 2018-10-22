@@ -8,6 +8,7 @@
 #include "./nvToolsExt.h"
 
 #include "test.h"
+#include "ParticleSystem.h"
 
 
 // Just some hints on implementation
@@ -15,6 +16,8 @@
 
 static std::atomic<float> globalTime;
 static volatile bool workerMustExit = false;
+
+ParticleSystem ps;
 
 // some code
 
@@ -30,7 +33,10 @@ void WorkerThread(void)
 		lastTime = time;
 
 		// some code
-		
+
+		float dt = delta / 1000; //delta time in seconds
+		ps.Update(dt);
+
 		if (delta < 10)
 			std::this_thread::sleep_for(std::chrono::milliseconds(10 - static_cast<int>(delta*1000.f)));
 
@@ -60,6 +66,8 @@ void test::term(void)
 
 void test::render(void)
 {
+	ps.Render();
+
 	// some code
 
 	// for (size_t i=0; i< .... ; ++i)
@@ -81,4 +89,5 @@ void test::update(int dt)
 void test::on_click(int x, int y)
 {
 	// some code
+	ps.Emit(x, SCREEN_HEIGHT - y);
 }

@@ -39,10 +39,17 @@
     <ClCompile Include="glut\win32_winproc.c" />
     <ClCompile Include="glut\win32_x11.c" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Particle.cpp" />
+    <ClCompile Include="ParticleController.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="test.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Particle.h" />
+    <ClInclude Include="ParticleController.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="Vector2.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B3FFBEF9-7B94-488A-98BE-0079263B9E95}</ProjectGuid>

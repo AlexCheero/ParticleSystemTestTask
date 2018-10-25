@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdlib>
 #include "Particle.h"
+#include <mutex>
 
 class ParticleSettingsFactory
 {
@@ -41,6 +42,7 @@ class ParticleController
 	int nextInactiveParticleId = 0;
 	int firstActiveParticleId = 0;
 	ParticleSettingsFactory settingsFactory;
+	std::mutex emitMutex;
 
 	int getNextId(int id, int steps = 1) { return (id + steps) % particlesTotal; }
 	int getActiveParticlesCount()
@@ -73,6 +75,7 @@ public:
 
 	void Emit(int x, int y)
 	{
+		std::lock_guard<std::mutex> lock(emitMutex);
 		for (int i = 0; i < particlesPerSystem; i++)
 		{
 			particles[nextInactiveParticleId].Init(settingsFactory.RandomizeSettingsForPosition(x, y));

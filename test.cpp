@@ -8,7 +8,7 @@
 #include "./nvToolsExt.h"
 
 #include "test.h"
-#include "ParticleSystem.h"
+#include "ParticleController.h"
 
 
 // Just some hints on implementation
@@ -17,8 +17,9 @@
 static std::atomic<float> globalTime;
 static volatile bool workerMustExit = false;
 
-ParticleSystem ps;
-
+std::unique_ptr<ParticleController> particle_controller;
+int maxEffectsCount = /*2;//*/ 2048;
+int maxParticlesPerEffect = /*4;//*/ 64;
 // some code
 
 void WorkerThread(void)
@@ -35,7 +36,7 @@ void WorkerThread(void)
 		// some code
 
 		float dt = delta / 1000; //delta time in seconds
-		ps.Update(dt);
+		particle_controller->Update(dt);
 
 		if (delta < 10)
 			std::this_thread::sleep_for(std::chrono::milliseconds(10 - static_cast<int>(delta*1000.f)));
@@ -49,6 +50,7 @@ void test::init(void)
 {
 	// some code
 
+	particle_controller = std::make_unique<ParticleController>(maxEffectsCount, maxParticlesPerEffect);
 	std::thread workerThread(WorkerThread);
 	workerThread.detach(); // Glut + MSVC = join hangs in atexit()
 
@@ -66,7 +68,7 @@ void test::term(void)
 
 void test::render(void)
 {
-	ps.Render();
+	particle_controller->Render();
 
 	// some code
 
@@ -89,5 +91,5 @@ void test::update(int dt)
 void test::on_click(int x, int y)
 {
 	// some code
-	ps.Emit(x, SCREEN_HEIGHT - y);
+	particle_controller->Emit(x, SCREEN_HEIGHT - y);
 }

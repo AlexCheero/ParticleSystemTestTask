@@ -2,6 +2,7 @@
 #include "Vector2.h"
 #include "test.h"
 #include <tuple>
+// #include "ParticleController.h"
 
 class Color
 {
@@ -42,13 +43,20 @@ public:
 
 class Particle
 {
+	float spawnProbability = 0.05f;
 	ParticleSettings _settings;
 
 public:
-	bool alive;
+	static bool ValidatePosition(Vector2 position)
+	{
+		if (position._x < 0 || position._x > test::SCREEN_WIDTH)
+			return false;
+		if (position._y < 0 || position._y > test::SCREEN_HEIGHT)
+			return false;
+		return true;
+	}
 
-	Particle() {}
-	~Particle();
+	bool alive = false;
 
 	void Kill()
 	{
@@ -62,13 +70,34 @@ public:
 		_settings = settings;
 	}
 
-	void Update(float dt)
+	Vector2 Update(float dt)
 	{
 		if (!alive)
-			return;
+			return { -1, -1 };
+
+		if (!ValidatePosition(_settings.position))
+		{
+			Kill();
+			return { -1, -1 };
+		}
+
+		if (_settings.lifeTime <= 0)
+		{
+			if (rand() % 101 + 1 <= spawnProbability * 100)
+			{
+				Vector2 spawnPosition { _settings.position._x, _settings.position._y };
+				Kill();
+				return spawnPosition;
+			}
+
+			Kill();
+			return { -1, -1 };
+		}
 
 		_settings.position += _settings.velocity * dt;
 		_settings.velocity._y -= _settings.gravity * dt;
+		_settings.lifeTime -= dt;
+		return { -1, -1 };
 	}
 
 	void Render()

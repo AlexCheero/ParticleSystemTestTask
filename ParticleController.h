@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdlib>
 #include "Particle.h"
 #include <mutex>
 
@@ -13,6 +12,12 @@ class ParticleController
 	int firstActiveParticleId = 0;
 	std::mutex emitMutex;
 
+	std::mutex swapMutex;
+	int renderBufferIndex = 2;
+	int readyBufferIndex = 2;
+	int currentBufferIndex = 0;
+	int nextBufferIndex = 1;
+
 	int getNextId(int id, int steps = 1) { return (id + steps) % particlesTotal; }
 	int getActiveParticlesCount()
 	{
@@ -20,57 +25,23 @@ class ParticleController
 			   nextInactiveParticleId - firstActiveParticleId :
 			   particlesTotal - firstActiveParticleId + nextInactiveParticleId;
 	}
+
+	void SwapUpdateBuffer();
+	void SwapRenderBuffer();
+
+	int realUpdatedParticleId(int id) { return id + currentBufferIndex * particlesTotal; }
+	int realRenderedParticleId(int id) { return id + renderBufferIndex * particlesTotal; }
 public:
-	ParticleController(int systemsCount, int particlesCount)
-	{
-		particlesPerSystem = particlesCount;
-		particlesTotal = systemsCount * particlesCount;
-		arena = malloc(sizeof(Particle) * particlesTotal);
-		Particle** ptrs = new Particle*[particlesTotal];
-		for (int i = 0; i < particlesTotal; i++)
-			ptrs[i] = new(reinterpret_cast<Particle*>(arena) + i)Particle;
-		particles = ptrs[0];
-		delete[]ptrs;
-	}
+	ParticleController(int systemsCount, int particlesCount);
+	~ParticleController();
 
-	~ParticleController()
-	{
-		for (int i = 0; i < particlesTotal; i++)
-			particles[i].~Particle();
-		free(arena);
-		arena = nullptr;
-		particles = nullptr;
-	}
-
-	void Emit(int x, int y)
-	{
-		std::lock_guard<std::mutex> lock(emitMutex);
-		for (int i = 0; i < particlesPerSystem; i++)
-		{
-			particles[nextInactiveParticleId].Init(ParticleSettings(x, y));
-			nextInactiveParticleId = getNextId(nextInactiveParticleId);
-		}
-	}
-
+	void Emit(int x, int y);
 	void Emit(Vector2 position)
 	{
 		Emit(position._x, position._y);
 	}
 
-	void Update(float dt)
-	{
-		for (int i = 0; i < particlesTotal; i++)
-		{
-			Vector2 spawnPosition;
-			if (particles[i].Update(dt, spawnPosition))
-				Emit(spawnPosition);
-		}
-	}
-
-	void Render()
-	{
-		for (int i = 0; i < particlesTotal; i++)
-			particles[i].Render();
-	}
+	void Update(float dt);
+	void Render();
 };
 

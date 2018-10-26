@@ -3,36 +3,6 @@
 #include "Particle.h"
 #include <mutex>
 
-class ParticleSettingsFactory
-{
-	const double PI = 3.14159;
-
-	float maxInitialVelocity = 100;
-	float minLifeTime = 0.5f;
-	float maxLifeTime = 5;
-	float minGravity = 50;
-	float maxGravity = 200;
-
-	static float Randomize(float from, float to)
-	{
-		return from + static_cast<float>(rand()) / (static_cast <float> (RAND_MAX / (to - from)));
-	}
-
-public:
-	ParticleSettings RandomizeSettingsForPosition(int x, int y)
-	{
-		Vector2 pos(x, y);
-		float angle = Randomize(0, 360) * PI / 180.0;
-		Vector2 vel(cos(angle), sin(angle));
-		vel *= Randomize(0, maxInitialVelocity);
-	
-		float lifeTime = Randomize(minLifeTime, maxLifeTime);
-		float grav = Randomize(minGravity, maxGravity);
-		Color col(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1));
-		return { pos, vel, lifeTime, grav, col };
-	}
-};
-
 class ParticleController
 {
 	void* arena;
@@ -41,7 +11,6 @@ class ParticleController
 	int particlesPerSystem;
 	int nextInactiveParticleId = 0;
 	int firstActiveParticleId = 0;
-	ParticleSettingsFactory settingsFactory;
 	std::mutex emitMutex;
 
 	int getNextId(int id, int steps = 1) { return (id + steps) % particlesTotal; }
@@ -78,7 +47,7 @@ public:
 		std::lock_guard<std::mutex> lock(emitMutex);
 		for (int i = 0; i < particlesPerSystem; i++)
 		{
-			particles[nextInactiveParticleId].Init(settingsFactory.RandomizeSettingsForPosition(x, y));
+			particles[nextInactiveParticleId].Init(ParticleSettings(x, y));
 			nextInactiveParticleId = getNextId(nextInactiveParticleId);
 		}
 	}

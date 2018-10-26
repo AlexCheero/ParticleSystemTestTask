@@ -2,14 +2,13 @@
 #include "Vector2.h"
 #include "test.h"
 #include <tuple>
-// #include "ParticleController.h"
 
 class Color
 {
 	std::tuple<float, float, float, float> colorTuple;
 
 public:
-	Color(float r, float g, float b, float a) : colorTuple(r, g, b, a) {}
+	Color(float r = 1, float g = 1, float b = 1, float a = 1) : colorTuple(r, g, b, a) {}
 
 	float r() { return std::get<0>(colorTuple); }
 
@@ -20,8 +19,20 @@ public:
 	float a() { return std::get<3>(colorTuple); }
 };
 
+const double PI = 3.14159;
+const float maxInitialVelocity = 100;
+const float minLifeTime = 0.5f;
+const float maxLifeTime = 5;
+const float minGravity = 50;
+const float maxGravity = 200;
+
 class ParticleSettings
 {
+	static float Randomize(float from, float to)
+	{
+		return from + static_cast<float>(rand()) / (static_cast <float> (RAND_MAX / (to - from)));
+	}
+
 public:
 	Vector2 position;
 	Vector2 velocity;
@@ -29,9 +40,16 @@ public:
 	float gravity;
 	Color color;
 
-	ParticleSettings(Vector2 pos = Vector2(), Vector2 vel = Vector2(), float time = 0, float grav = 1000.f, Color col = Color(1, 1, 1, 1))
-		: position(pos), velocity(vel), lifeTime(time), gravity(grav), color(col)
-	{}
+	ParticleSettings() : lifeTime(0), gravity(0) { }
+
+	ParticleSettings(int x, int y)
+		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), gravity(Randomize(minGravity, maxGravity)),
+		  color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
+	{
+		float angle = Randomize(0, 360) * PI / 180.0;
+		velocity = Vector2(cos(angle), sin(angle));
+		velocity *= Randomize(0, maxInitialVelocity);
+	}
 
 	void Reset()
 	{
@@ -47,6 +65,8 @@ class Particle
 	ParticleSettings _settings;
 
 public:
+	Particle() = default;
+
 	static bool ValidatePosition(Vector2 position)
 	{
 		if (position._x < 0 || position._x > test::SCREEN_WIDTH)

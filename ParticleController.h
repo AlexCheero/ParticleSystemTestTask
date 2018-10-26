@@ -61,12 +61,9 @@ public:
 	{
 		for (int i = 0; i < particlesTotal; i++)
 		{
-			Vector2 spawnPosition = particles[i].Update(dt);
-			if (Particle::ValidatePosition(spawnPosition))
-			{
+			Vector2 spawnPosition;
+			if (particles[i].Update(dt, spawnPosition))
 				Emit(spawnPosition);
-				particles[i].Kill();
-			}
 		}
 	}
 

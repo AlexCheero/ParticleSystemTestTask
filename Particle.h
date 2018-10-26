@@ -64,9 +64,6 @@ class Particle
 	float spawnProbability = 0.05f;
 	ParticleSettings _settings;
 
-public:
-	Particle() = default;
-
 	static bool ValidatePosition(Vector2 position)
 	{
 		if (position._x < 0 || position._x > test::SCREEN_WIDTH)
@@ -75,6 +72,9 @@ public:
 			return false;
 		return true;
 	}
+
+public:
+	Particle() = default;
 
 	bool alive = false;
 
@@ -90,34 +90,34 @@ public:
 		_settings = settings;
 	}
 
-	Vector2 Update(float dt)
+	bool Update(float dt, Vector2& spawnPosition)
 	{
 		if (!alive)
-			return { -1, -1 };
+			return false;
 
 		if (!ValidatePosition(_settings.position))
 		{
 			Kill();
-			return { -1, -1 };
+			return false;
 		}
 
 		if (_settings.lifeTime <= 0)
 		{
 			if (rand() % 101 + 1 <= spawnProbability * 100)
 			{
-				Vector2 spawnPosition { _settings.position._x, _settings.position._y };
+				spawnPosition = { _settings.position._x, _settings.position._y };
 				Kill();
-				return spawnPosition;
+				return true;
 			}
 
 			Kill();
-			return { -1, -1 };
+			return false;
 		}
 
 		_settings.position += _settings.velocity * dt;
 		_settings.velocity._y -= _settings.gravity * dt;
 		_settings.lifeTime -= dt;
-		return { -1, -1 };
+		return false;
 	}
 
 	void Render()

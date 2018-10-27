@@ -18,8 +18,8 @@ static std::atomic<float> globalTime;
 static volatile bool workerMustExit = false;
 
 std::unique_ptr<ParticleController> particle_controller;
-int maxEffectsCount = /*2;//*/ 2048;
-int maxParticlesPerEffect = /*4;//*/ 64;
+int maxEffectsCount = /*4;// */2048;
+int maxParticlesPerEffect = /*2;// */64;
 // some code
 
 void WorkerThread(void)

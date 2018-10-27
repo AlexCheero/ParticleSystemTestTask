@@ -19,12 +19,6 @@ class ParticleController
 	int nextBufferIndex = 1;
 
 	int getNextId(int id, int steps = 1) { return (id + steps) % particlesTotal; }
-	int getActiveParticlesCount()
-	{
-		return firstActiveParticleId < nextInactiveParticleId ?
-			   nextInactiveParticleId - firstActiveParticleId :
-			   particlesTotal - firstActiveParticleId + nextInactiveParticleId;
-	}
 
 	void SwapUpdateBuffer();
 	void SwapRenderBuffer();

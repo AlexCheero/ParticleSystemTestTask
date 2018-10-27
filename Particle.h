@@ -45,6 +45,7 @@ public:
 	ParticleSettings(int x, int y)
 		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), gravity(Randomize(minGravity, maxGravity)),
 		  color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
+		  // color(1, 1, 1, 1)
 	{
 		float angle = Randomize(0, 360) * PI / 180.0;
 		velocity = Vector2(cos(angle), sin(angle));
@@ -63,6 +64,7 @@ class Particle
 {
 	float spawnProbability = 0.05f;
 	ParticleSettings _settings;
+	bool alive = false;
 
 	static bool ValidatePosition(Vector2 position)
 	{
@@ -74,9 +76,7 @@ class Particle
 	}
 
 public:
-	Particle() = default;
-
-	bool alive = false;
+	const ParticleSettings& GetSettings() const { return _settings; }
 
 	void Kill()
 	{

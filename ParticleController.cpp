@@ -1,5 +1,4 @@
 #include "ParticleController.h"
-#include <future>
 
 ParticleController::ParticleController(int systemsCount, int particlesCount)
 {
@@ -12,6 +11,8 @@ ParticleController::ParticleController(int systemsCount, int particlesCount)
 		ptrs[i] = new(reinterpret_cast<Particle*>(arena) + i)Particle;
 	particles = ptrs[0];
 	delete[]ptrs;
+
+	futures.reserve(GetThreadsCount(particlesTotal));
 }
 
 ParticleController::~ParticleController()
@@ -42,12 +43,23 @@ void ParticleController::Emit(int x, int y, float time)
 
 void ParticleController::Update(float dt, float time)
 {
-	int count = activeParticlesCounts[currentBufferIndex];
-	int half = count / 2;
+	int overallCount = activeParticlesCounts[currentBufferIndex];
+	int threadCount = GetThreadsCount(overallCount);
+	int countPerThread = overallCount / (threadCount + 1);
 
-	std::future<void> first_half = std::async(&ParticleController::UpdatePart, this, dt, time, 0, half);
-	UpdatePart(dt, time, half, count);
-	first_half.get();
+	for (int i = 0; i < threadCount; i++)
+	{
+		int start = i * countPerThread;
+		int end = start + countPerThread;
+		if (futures.size() < i + 1)
+			futures.push_back(std::async(&ParticleController::UpdatePart, this, dt, time, start, end));
+		else
+			futures[i] = std::async(&ParticleController::UpdatePart, this, dt, time, start, end);
+	}
+
+	UpdatePart(dt, time, countPerThread * threadCount, overallCount);
+	for (int i = 0; i < threadCount; i++)
+		futures[i].get();
 
 	SwapUpdateBuffer();
 }

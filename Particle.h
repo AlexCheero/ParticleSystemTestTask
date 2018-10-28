@@ -45,8 +45,7 @@ public:
 
 	ParticleSettings(int x, int y, float time)
 		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), birthTime(time), gravity(Randomize(minGravity, maxGravity)),
-		  // color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
-		  color(1, 1, 1, 1)
+		  color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
 	{
 		float angle = Randomize(0, 360) * PI / 180.0;
 		velocity = Vector2(cos(angle), sin(angle));

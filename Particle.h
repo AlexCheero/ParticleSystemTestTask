@@ -1,22 +1,25 @@
 #pragma once
+
 #include "Vector2.h"
 #include "test.h"
+
 #include <tuple>
 
 class Color
 {
-	std::tuple<float, float, float, float> colorTuple;
+private:
+	float r;
+	float g;
+	float b;
+	float a;
 
 public:
-	Color(float r = 1, float g = 1, float b = 1, float a = 1) : colorTuple(r, g, b, a) {}
+	Color(float rCol = 1, float gCol = 1, float bCol = 1, float aCol = 1) : r(rCol), g(gCol), b(bCol), a(aCol) {}
 
-	float r() { return std::get<0>(colorTuple); }
-
-	float g() { return std::get<1>(colorTuple); }
-	
-	float b() { return std::get<2>(colorTuple); }
-	
-	float a() { return std::get<3>(colorTuple); }
+	float R() { return r; }
+	float G() { return g; }
+	float B() { return b; }
+	float A() { return a; }
 };
 
 const double PI = 3.14159;
@@ -28,6 +31,7 @@ const float maxGravity = 200;
 
 class ParticleSettings
 {
+private:
 	static float Randomize(float from, float to)
 	{
 		return from + static_cast<float>(rand()) / (static_cast <float> (RAND_MAX / (to - from)));
@@ -62,6 +66,7 @@ public:
 
 class Particle
 {
+private:
 	float spawnProbability = 0.05f;
 	ParticleSettings _settings;
 	bool alive = false;
@@ -71,11 +76,11 @@ public:
 
 	bool IsAlive() { return alive; }
 
-	bool IsVisible(Vector2 position)
+	bool IsVisible(const Vector2& position)
 	{
-		if (position._x < 0 || position._x > test::SCREEN_WIDTH)
+		if (position.x < 0 || position.x > test::SCREEN_WIDTH)
 			return false;
-		if (position._y < 0 || position._y > test::SCREEN_HEIGHT)
+		if (position.y < 0 || position.y > test::SCREEN_HEIGHT)
 			return false;
 		return true;
 	}
@@ -101,15 +106,15 @@ public:
 	void UpdatePosition(float dt)
 	{
 		_settings.position += _settings.velocity * dt;
-		_settings.velocity._y -= _settings.gravity * dt;
+		_settings.velocity.y -= _settings.gravity * dt;
 	}
 
 	void Render()
 	{
 		if (!alive || !IsVisible())
 			return;
-		platform::drawPoint(_settings.position._x, _settings.position._y, _settings.color.r(),
-			_settings.color.g(), _settings.color.b(), _settings.color.a());
+		platform::drawPoint(_settings.position.x, _settings.position.y, _settings.color.R(),
+			_settings.color.G(), _settings.color.B(), _settings.color.A());
 	}
 };
 

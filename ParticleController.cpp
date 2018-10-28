@@ -4,7 +4,7 @@ ParticleController::ParticleController(int systemsCount, int particlesCount)
 {
 	particlesPerSystem = particlesCount;
 	particlesTotal = systemsCount * particlesCount;
-	int realParticlesCount = particlesTotal * 3; //2 update and 1 render buffer
+	const int realParticlesCount = particlesTotal * 3; //2 update and 1 render buffer
 	arena = malloc(sizeof(Particle) * realParticlesCount);
 	Particle** ptrs = new Particle*[realParticlesCount];
 	for (int i = 0; i < realParticlesCount; i++)
@@ -43,9 +43,9 @@ void ParticleController::Emit(int x, int y, float time)
 
 void ParticleController::Update(float dt, float time)
 {
-	int overallCount = activeParticlesCounts[currentBufferIndex];
-	int threadCount = GetThreadsCount(overallCount);
-	int countPerThread = overallCount / (threadCount + 1);
+	const int overallCount = activeParticlesCounts[currentBufferIndex];
+	const int threadCount = GetThreadsCount(overallCount);
+	const int countPerThread = overallCount / (threadCount + 1);
 
 	for (int i = 0; i < threadCount; i++)
 	{
@@ -66,10 +66,10 @@ void ParticleController::Update(float dt, float time)
 
 void ParticleController::UpdatePart(float dt, float time, int start, int end)
 {
-	int first = firstActiveParticleIds[currentBufferIndex];
+	const int first = firstActiveParticleIds[currentBufferIndex];
 	for (int index = start; index < end; index++)
 	{
-		int i = getNextId(first, index);
+		const int i = getNextId(first, index);
 
 		Particle& current = particles[realUpdatedParticleId(i)];
 		UpdateParticle(current, dt, time);
@@ -93,7 +93,7 @@ void ParticleController::UpdateParticle(Particle& particle, float dt, float time
 	{
 		if (rand() % 101 + 1 <= spawnProbability * 100)
 		{
-			Vector2 spawnPosition = { particle.GetSettings().position._x, particle.GetSettings().position._y };
+			const Vector2 spawnPosition = { particle.GetSettings().position.x, particle.GetSettings().position.y };
 			if (particle.IsVisible(spawnPosition))
 				Emit(spawnPosition, time);
 			particle.Kill();
@@ -122,7 +122,7 @@ void ParticleController::Render()
 {
 	for (int index = 0; index < activeParticlesCounts[renderBufferIndex]; index++)
 	{
-		int i = getNextId(firstActiveParticleIds[renderBufferIndex], index);
+		const int i = getNextId(firstActiveParticleIds[renderBufferIndex], index);
 		Particle& current = particles[realRenderedParticleId(i)];
 		current.Render();
 	}

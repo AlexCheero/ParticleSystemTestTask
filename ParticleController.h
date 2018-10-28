@@ -1,5 +1,7 @@
 #pragma once
+
 #include "Particle.h"
+
 #include <mutex>
 #include <algorithm>
 #include <vector>
@@ -7,10 +9,11 @@
 
 class ParticleController
 {
-	void* arena;
-	Particle* particles;
-	int particlesTotal;
-	int particlesPerSystem;
+private:
+	void* arena = nullptr;
+	Particle* particles = nullptr;
+	int particlesTotal = 0;
+	int particlesPerSystem = 0;
 	int firstActiveParticleIds[3] = { 0, 0, 0 };
 	int nextInactiveParticleIds[3] = { 0, 0, 0 };
 	int activeParticlesCounts[3] = { 0, 0, 0 };
@@ -37,10 +40,10 @@ class ParticleController
 	int GetThreadsCount(int particleCount)
 	{
 		const int minPerThread = 64;
-		int desirableThreads = particleCount / minPerThread;
+		const int desirableThreads = particleCount / minPerThread;
 		int hardwareThreads = std::thread::hardware_concurrency();
 		hardwareThreads -= 2;//for update and render threads
-		int maxThreads = hardwareThreads > 0 ? hardwareThreads : 2;
+		const int maxThreads = hardwareThreads > 0 ? hardwareThreads : 2;
 		return std::min(desirableThreads, maxThreads);
 	}
 
@@ -53,7 +56,7 @@ public:
 	void Emit(int x, int y, float time);
 	void Emit(Vector2 position, float time)
 	{
-		Emit(position._x, position._y, time);
+		Emit(position.x, position.y, time);
 	}
 
 	void Update(float dt, float time);

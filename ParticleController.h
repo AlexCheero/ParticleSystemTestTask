@@ -10,6 +10,7 @@ class ParticleController
 	int particlesPerSystem;
 	int firstActiveParticleIds[3] = { 0, 0, 0 };
 	int nextInactiveParticleIds[3] = { 0, 0, 0 };
+	int activeParticlesCounts[3] = { 0, 0, 0 };
 	std::mutex emitMutex;
 
 	std::mutex swapMutex;
@@ -18,6 +19,8 @@ class ParticleController
 	int currentBufferIndex = 0;
 	int nextBufferIndex = 1;
 
+	const float spawnProbability = 0.05f;
+
 	int getNextId(int id, int steps = 1) { return (id + steps) % particlesTotal; }
 
 	void SwapUpdateBuffer();
@@ -25,17 +28,19 @@ class ParticleController
 
 	int realUpdatedParticleId(int id) { return id + currentBufferIndex * particlesTotal; }
 	int realRenderedParticleId(int id) { return id + renderBufferIndex * particlesTotal; }
+
+	void UpdateParticle(Particle& particle, float dt, float time);
 public:
 	ParticleController(int systemsCount, int particlesCount);
 	~ParticleController();
 
-	void Emit(int x, int y);
-	void Emit(Vector2 position)
+	void Emit(int x, int y, float time);
+	void Emit(Vector2 position, float time)
 	{
-		Emit(position._x, position._y);
+		Emit(position._x, position._y, time);
 	}
 
-	void Update(float dt);
+	void Update(float dt, float time);
 	void Render();
 };
 

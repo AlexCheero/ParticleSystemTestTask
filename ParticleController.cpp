@@ -1,6 +1,5 @@
 #include "ParticleController.h"
 
-
 ParticleController::ParticleController(int systemsCount, int particlesCount)
 {
 	particlesPerSystem = particlesCount;
@@ -23,14 +22,14 @@ ParticleController::~ParticleController()
 	particles = nullptr;
 }
 
-void ParticleController::Emit(int x, int y)
+void ParticleController::Emit(int x, int y, float time)
 {
 	std::lock_guard<std::mutex> lock(emitMutex);
 	Particle* first = &particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
 	for (int i = 0; i < particlesPerSystem; i++)
 	{
 		Particle& current = particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
-		current.Init(ParticleSettings(x, y));
+		current.Init(ParticleSettings(x, y, time));
 
 		if (current.GetSettings().lifeTime > first->GetSettings().lifeTime)
 			std::swap(*first, current);
@@ -39,21 +38,44 @@ void ParticleController::Emit(int x, int y)
 	}
 }
 
-void ParticleController::Update(float dt)
+void ParticleController::Update(float dt, float time)
 {
 	for (int i = 0; i < particlesTotal; i++)
 	{
 		Particle& current = particles[realUpdatedParticleId(i)];
-		Vector2 spawnPosition;
-		if (current.Update(dt, spawnPosition))
-			Emit(spawnPosition);
-	
+		UpdateParticle(current, dt, time);
+
 		//skip inactive effect
 		if (i % particlesPerSystem == 0 && current.GetSettings().lifeTime == 0)
+		{
+			// activeParticlesCounts[currentBufferIndex]
 			i += particlesPerSystem - 1;
+		}
 	}
 
 	SwapUpdateBuffer();
+}
+
+void ParticleController::UpdateParticle(Particle& particle, float dt, float time)
+{
+	if (!particle.IsAlive())
+		return;
+
+	if (particle.IsDeadByTime(time))
+	{
+		if (rand() % 101 + 1 <= spawnProbability * 100)
+		{
+			Vector2 spawnPosition = { particle.GetSettings().position._x, particle.GetSettings().position._y };
+			if (particle.IsVisible(spawnPosition))
+				Emit(spawnPosition, time);
+			particle.Kill();
+		}
+
+		particle.Kill();
+		return;
+	}
+
+	particle.UpdatePosition(dt);
 }
 
 void ParticleController::SwapUpdateBuffer()

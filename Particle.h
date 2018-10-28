@@ -37,14 +37,14 @@ public:
 	Vector2 position;
 	Vector2 velocity;
 	float lifeTime;
-	float maxTime;
+	float birthTime;
 	float gravity;
 	Color color;
 
 	ParticleSettings() : lifeTime(0), gravity(0) { }
 
-	ParticleSettings(int x, int y)
-		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), maxTime(maxLifeTime), gravity(Randomize(minGravity, maxGravity)),
+	ParticleSettings(int x, int y, float time)
+		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), birthTime(time), gravity(Randomize(minGravity, maxGravity)),
 		  // color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
 		  color(1, 1, 1, 1)
 	{
@@ -67,7 +67,12 @@ class Particle
 	ParticleSettings _settings;
 	bool alive = false;
 
-	static bool IsVisible(Vector2 position)
+public:
+	const ParticleSettings& GetSettings() const { return _settings; }
+
+	bool IsAlive() { return alive; }
+
+	bool IsVisible(Vector2 position)
 	{
 		if (position._x < 0 || position._x > test::SCREEN_WIDTH)
 			return false;
@@ -76,10 +81,9 @@ class Particle
 		return true;
 	}
 
-public:
-	const ParticleSettings& GetSettings() const { return _settings; }
+	bool IsVisible() { return IsVisible(_settings.position);  }
 
-	bool isExactlyDead() { return _settings.maxTime <= 0; }
+	bool IsDeadByTime(float time) { return _settings.birthTime > 0 && time > _settings.birthTime + _settings.lifeTime; }
 
 	void Kill()
 	{
@@ -93,40 +97,15 @@ public:
 		_settings = settings;
 	}
 
-	bool Update(float dt, Vector2& spawnPosition)
+	void UpdatePosition(float dt)
 	{
-		_settings.maxTime -= dt;
-		if (!alive)
-			return false;
-
-		if (!IsVisible(_settings.position))
-		{
-			Kill();
-			return false;
-		}
-
-		if (_settings.lifeTime <= 0)
-		{
-			if (rand() % 101 + 1 <= spawnProbability * 100)
-			{
-				spawnPosition = { _settings.position._x, _settings.position._y };
-				Kill();
-				return IsVisible(spawnPosition);
-			}
-
-			Kill();
-			return false;
-		}
-
 		_settings.position += _settings.velocity * dt;
 		_settings.velocity._y -= _settings.gravity * dt;
-		_settings.lifeTime -= dt;
-		return false;
 	}
 
 	void Render()
 	{
-		if (!alive)
+		if (!alive || !IsVisible())
 			return;
 		platform::drawPoint(_settings.position._x, _settings.position._y, _settings.color.r(),
 			_settings.color.g(), _settings.color.b(), _settings.color.a());

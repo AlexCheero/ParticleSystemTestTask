@@ -36,7 +36,7 @@ void WorkerThread(void)
 		// some code
 
 		float dt = delta / 1000; //delta time in seconds
-		particle_controller->Update(dt);
+		particle_controller->Update(dt, time / 1000/*time in seconds*/);
 
 		if (delta < 10)
 			std::this_thread::sleep_for(std::chrono::milliseconds(10 - static_cast<int>(delta*1000.f)));
@@ -91,5 +91,5 @@ void test::update(int dt)
 void test::on_click(int x, int y)
 {
 	// some code
-	particle_controller->Emit(x, SCREEN_HEIGHT - y);
+	particle_controller->Emit(x, SCREEN_HEIGHT - y, globalTime.load() / 1000 /*time in seconds*/);
 }

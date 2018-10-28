@@ -37,15 +37,16 @@ public:
 	Vector2 position;
 	Vector2 velocity;
 	float lifeTime;
+	float maxTime;
 	float gravity;
 	Color color;
 
 	ParticleSettings() : lifeTime(0), gravity(0) { }
 
 	ParticleSettings(int x, int y)
-		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), gravity(Randomize(minGravity, maxGravity)),
-		  color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
-		  // color(1, 1, 1, 1)
+		: position(x, y), lifeTime(Randomize(minLifeTime, maxLifeTime)), maxTime(maxLifeTime), gravity(Randomize(minGravity, maxGravity)),
+		  // color(Randomize(0, 1), Randomize(0, 1), Randomize(0, 1), Randomize(0.5f, 1))
+		  color(1, 1, 1, 1)
 	{
 		float angle = Randomize(0, 360) * PI / 180.0;
 		velocity = Vector2(cos(angle), sin(angle));
@@ -66,7 +67,7 @@ class Particle
 	ParticleSettings _settings;
 	bool alive = false;
 
-	static bool ValidatePosition(Vector2 position)
+	static bool IsVisible(Vector2 position)
 	{
 		if (position._x < 0 || position._x > test::SCREEN_WIDTH)
 			return false;
@@ -77,6 +78,8 @@ class Particle
 
 public:
 	const ParticleSettings& GetSettings() const { return _settings; }
+
+	bool isExactlyDead() { return _settings.maxTime <= 0; }
 
 	void Kill()
 	{
@@ -92,10 +95,11 @@ public:
 
 	bool Update(float dt, Vector2& spawnPosition)
 	{
+		_settings.maxTime -= dt;
 		if (!alive)
 			return false;
 
-		if (!ValidatePosition(_settings.position))
+		if (!IsVisible(_settings.position))
 		{
 			Kill();
 			return false;
@@ -107,7 +111,7 @@ public:
 			{
 				spawnPosition = { _settings.position._x, _settings.position._y };
 				Kill();
-				return true;
+				return IsVisible(spawnPosition);
 			}
 
 			Kill();

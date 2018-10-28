@@ -8,8 +8,8 @@ class ParticleController
 	Particle* particles;
 	int particlesTotal;
 	int particlesPerSystem;
-	int nextInactiveParticleId = 0;
-	int firstActiveParticleId = 0;
+	int firstActiveParticleIds[3] = { 0, 0, 0 };
+	int nextInactiveParticleIds[3] = { 0, 0, 0 };
 	std::mutex emitMutex;
 
 	std::mutex swapMutex;

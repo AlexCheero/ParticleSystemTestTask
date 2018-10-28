@@ -26,16 +26,16 @@ ParticleController::~ParticleController()
 void ParticleController::Emit(int x, int y)
 {
 	std::lock_guard<std::mutex> lock(emitMutex);
-	Particle* first = &particles[realUpdatedParticleId(nextInactiveParticleId)];
+	Particle* first = &particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
 	for (int i = 0; i < particlesPerSystem; i++)
 	{
-		Particle& current = particles[realUpdatedParticleId(nextInactiveParticleId)];
+		Particle& current = particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
 		current.Init(ParticleSettings(x, y));
 
 		if (current.GetSettings().lifeTime > first->GetSettings().lifeTime)
 			std::swap(*first, current);
 
-		nextInactiveParticleId = getNextId(nextInactiveParticleId);
+		nextInactiveParticleIds[currentBufferIndex] = getNextId(nextInactiveParticleIds[currentBufferIndex]);
 	}
 }
 
@@ -63,6 +63,7 @@ void ParticleController::SwapUpdateBuffer()
 	std::swap(currentBufferIndex, nextBufferIndex);
 	
 	std::memcpy(&particles[currentBufferIndex * particlesTotal], &particles[readyBufferIndex * particlesTotal], sizeof Particle * particlesTotal);
+	nextInactiveParticleIds[currentBufferIndex] = nextInactiveParticleIds[readyBufferIndex];
 }
 
 void ParticleController::Render()

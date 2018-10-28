@@ -79,16 +79,18 @@ void ParticleController::UpdatePart(float dt, float time, int start, int end)
 void ParticleController::UpdateParticle(Particle& particle, float dt, float time)
 {
 	if (!particle.IsAlive())
-		return;
-
-	if (particle.IsDeadByTime(time))
 	{
+		if (particle.IsExactlyDead(time))
 		{
 			std::lock_guard<std::mutex> lock(swapMutex);
 			firstActiveParticleIds[currentBufferIndex] = getNextId(firstActiveParticleIds[currentBufferIndex]);
 			activeParticlesCounts[currentBufferIndex]--;
 		}
+		return;
+	}
 
+	if (particle.IsDeadByTime(time))
+	{
 		if (rand() % 101 + 1 <= spawnProbability * 100)
 		{
 			Vector2 spawnPosition = { particle.GetSettings().position._x, particle.GetSettings().position._y };

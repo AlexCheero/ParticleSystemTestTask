@@ -84,6 +84,8 @@ public:
 
 	bool IsDeadByTime(float time) { return _settings.birthTime > 0 && time > _settings.birthTime + _settings.lifeTime; }
 
+	bool IsExactlyDead(float time) { return _settings.birthTime > 0 && time > _settings.birthTime + maxLifeTime; }
+
 	void Kill()
 	{
 		alive = false;

@@ -29,6 +29,7 @@ class ParticleController
 	int realUpdatedParticleId(int id) { return id + currentBufferIndex * particlesTotal; }
 	int realRenderedParticleId(int id) { return id + renderBufferIndex * particlesTotal; }
 
+	void UpdatePart(float dt, float time, int start, int end);
 	void UpdateParticle(Particle& particle, float dt, float time);
 public:
 	ParticleController(int systemsCount, int particlesCount);

@@ -1,4 +1,5 @@
 #include "ParticleController.h"
+#include <future>
 
 ParticleController::ParticleController(int systemsCount, int particlesCount)
 {
@@ -25,35 +26,42 @@ ParticleController::~ParticleController()
 void ParticleController::Emit(int x, int y, float time)
 {
 	std::lock_guard<std::mutex> lock(emitMutex);
-	Particle* first = &particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
 	for (int i = 0; i < particlesPerSystem; i++)
 	{
 		Particle& current = particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
 		current.Init(ParticleSettings(x, y, time));
 
-		if (current.GetSettings().lifeTime > first->GetSettings().lifeTime)
-			std::swap(*first, current);
-
 		nextInactiveParticleIds[currentBufferIndex] = getNextId(nextInactiveParticleIds[currentBufferIndex]);
+
+		if (nextInactiveParticleIds[currentBufferIndex] == firstActiveParticleIds[currentBufferIndex])
+			firstActiveParticleIds[currentBufferIndex] = getNextId(firstActiveParticleIds[currentBufferIndex]);
+		else
+			activeParticlesCounts[currentBufferIndex]++;
 	}
 }
 
 void ParticleController::Update(float dt, float time)
 {
-	for (int i = 0; i < particlesTotal; i++)
-	{
-		Particle& current = particles[realUpdatedParticleId(i)];
-		UpdateParticle(current, dt, time);
+	int count = activeParticlesCounts[currentBufferIndex];
+	int half = count / 2;
 
-		//skip inactive effect
-		if (i % particlesPerSystem == 0 && current.GetSettings().lifeTime == 0)
-		{
-			// activeParticlesCounts[currentBufferIndex]
-			i += particlesPerSystem - 1;
-		}
-	}
+	std::future<void> first_half = std::async(&ParticleController::UpdatePart, this, dt, time, 0, half);
+	UpdatePart(dt, time, half, count);
+	first_half.get();
 
 	SwapUpdateBuffer();
+}
+
+void ParticleController::UpdatePart(float dt, float time, int start, int end)
+{
+	int first = firstActiveParticleIds[currentBufferIndex];
+	for (int index = start; index < end; index++)
+	{
+		int i = getNextId(first, index);
+
+		Particle& current = particles[realUpdatedParticleId(i)];
+		UpdateParticle(current, dt, time);
+	}
 }
 
 void ParticleController::UpdateParticle(Particle& particle, float dt, float time)
@@ -63,6 +71,12 @@ void ParticleController::UpdateParticle(Particle& particle, float dt, float time
 
 	if (particle.IsDeadByTime(time))
 	{
+		{
+			std::lock_guard<std::mutex> lock(swapMutex);
+			firstActiveParticleIds[currentBufferIndex] = getNextId(firstActiveParticleIds[currentBufferIndex]);
+			activeParticlesCounts[currentBufferIndex]--;
+		}
+
 		if (rand() % 101 + 1 <= spawnProbability * 100)
 		{
 			Vector2 spawnPosition = { particle.GetSettings().position._x, particle.GetSettings().position._y };
@@ -86,18 +100,17 @@ void ParticleController::SwapUpdateBuffer()
 	
 	std::memcpy(&particles[currentBufferIndex * particlesTotal], &particles[readyBufferIndex * particlesTotal], sizeof Particle * particlesTotal);
 	nextInactiveParticleIds[currentBufferIndex] = nextInactiveParticleIds[readyBufferIndex];
+	firstActiveParticleIds[currentBufferIndex] = firstActiveParticleIds[readyBufferIndex];
+	activeParticlesCounts[currentBufferIndex] = activeParticlesCounts[readyBufferIndex];
 }
 
 void ParticleController::Render()
 {
-	for (int i = 0; i < particlesTotal; i++)
+	for (int index = 0; index < activeParticlesCounts[renderBufferIndex]; index++)
 	{
+		int i = getNextId(firstActiveParticleIds[renderBufferIndex], index);
 		Particle& current = particles[realRenderedParticleId(i)];
 		current.Render();
-
-		//skip inactive effect
-		if (i % particlesPerSystem == 0 && current.GetSettings().lifeTime == 0)
-			i += particlesPerSystem - 1;
 	}
 
 	SwapRenderBuffer();

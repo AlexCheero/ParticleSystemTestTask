@@ -17,9 +17,8 @@ private:
 	int firstActiveParticleIds[3] = { 0, 0, 0 };
 	int nextInactiveParticleIds[3] = { 0, 0, 0 };
 	int activeParticlesCounts[3] = { 0, 0, 0 };
-	std::mutex emitMutex;
-
-	std::mutex swapMutex;
+	
+	std::mutex mutex;
 	int renderBufferIndex = 2;
 	int readyBufferIndex = 2;
 	int currentBufferIndex = 0;

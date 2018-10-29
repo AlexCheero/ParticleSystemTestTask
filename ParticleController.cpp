@@ -26,7 +26,7 @@ ParticleController::~ParticleController()
 
 void ParticleController::Emit(int x, int y, float time)
 {
-	std::lock_guard<std::mutex> lock(emitMutex);
+	std::lock_guard<std::mutex> lock(mutex);
 	for (int i = 0; i < particlesPerSystem; i++)
 	{
 		Particle& current = particles[realUpdatedParticleId(nextInactiveParticleIds[currentBufferIndex])];
@@ -82,7 +82,7 @@ void ParticleController::UpdateParticle(Particle& particle, float dt, float time
 	{
 		if (particle.IsExactlyDead(time))
 		{
-			std::lock_guard<std::mutex> lock(swapMutex);
+			std::lock_guard<std::mutex> lock(mutex);
 			firstActiveParticleIds[currentBufferIndex] = getNextId(firstActiveParticleIds[currentBufferIndex]);
 			activeParticlesCounts[currentBufferIndex]--;
 		}
@@ -108,7 +108,7 @@ void ParticleController::UpdateParticle(Particle& particle, float dt, float time
 
 void ParticleController::SwapUpdateBuffer()
 {
-	std::lock_guard<std::mutex> lock(swapMutex);
+	std::lock_guard<std::mutex> lock(mutex);
 	readyBufferIndex = currentBufferIndex;
 	std::swap(currentBufferIndex, nextBufferIndex);
 	
@@ -132,7 +132,7 @@ void ParticleController::Render()
 
 void ParticleController::SwapRenderBuffer()
 {
-	std::lock_guard<std::mutex> lock(swapMutex);
+	std::lock_guard<std::mutex> lock(mutex);
 	if (renderBufferIndex != readyBufferIndex)
 	{
 		nextBufferIndex = renderBufferIndex;
